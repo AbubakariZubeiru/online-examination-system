@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.title }} - Take Exam{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 style="margin-bottom:0.2rem;">{{ exam.title }}</h1>
+      <p style="color: var(--muted); margin-top:0;">{{ exam.questions|length }} question(s) &middot; {{ exam.total_marks() }} total marks</p>
+    </div>
+    <div id="timer">--:--</div>
+  </div>
+
+  {% if exam.questions %}
+  <form id="exam-form" method="POST" action="{{ url_for('student.take_exam', exam_id=exam.id) }}">
+    {% for q in exam.questions %}
+    <div class="card question-block">
+      <p><strong>Q{{ loop.index }}. {{ q.question_text }}</strong> <span class="badge">{{ q.marks }} pt(s)</span></p>
+      {% for c in q.choices %}
+      <div class="choice-row">
+        <input type="radio" id="choice_{{ c.id }}" name="question_{{ q.id }}" value="{{ c.id }}">
+        <label for="choice_{{ c.id }}" style="font-weight:400;">{{ c.choice_text }}</label>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn" id="submit-btn">Submit Exam</button>
+  </form>
+  {% else %}
+  <div class="card empty-state">
+    <p>This exam has no questions yet.</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  // Countdown timer based on exam duration; auto-submits when time runs out.
+  let totalSeconds = {{ exam.duration_minutes }} * 60;
+  const timerEl = document.getElementById('timer');
+  const form = document.getElementById('exam-form');
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+
+  function tick() {
+    if (totalSeconds <= 0) {
+      timerEl.textContent = "00:00";
+      if (form) {
+        form.submit();
+      }
+      return;
+    }
+    timerEl.textContent = formatTime(totalSeconds);
+    totalSeconds -= 1;
+    setTimeout(tick, 1000);
+  }
+  tick();
+</script>
+{% endblock %}

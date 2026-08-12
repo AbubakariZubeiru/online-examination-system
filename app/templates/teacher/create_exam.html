@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Create Exam{% endblock %}
+{% block content %}
+<div class="container" style="max-width:600px;">
+  <h1>Create New Exam</h1>
+  <div class="card">
+    <form method="POST" action="{{ url_for('teacher.create_exam') }}">
+      <div class="form-row">
+        <label for="title">Exam Title</label>
+        <input type="text" id="title" name="title" value="{{ form_data.get('title', '') }}" required autofocus>
+      </div>
+      <div class="form-row">
+        <label for="description">Description</label>
+        <textarea id="description" name="description">{{ form_data.get('description', '') }}</textarea>
+      </div>
+      <div class="form-row">
+        <label for="duration_minutes">Duration (minutes)</label>
+        <input type="number" id="duration_minutes" name="duration_minutes" min="1"
+               value="{{ form_data.get('duration_minutes', '30') }}" required>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn">Create & Add Questions</button>
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

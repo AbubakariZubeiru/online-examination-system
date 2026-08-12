@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Manage Questions - {{ exam.title }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 style="margin-bottom:0.2rem;">{{ exam.title }}</h1>
+      <p style="color: var(--muted); margin-top:0;">
+        {{ exam.duration_minutes }} minutes &middot; {{ exam.questions|length }} question(s) &middot; {{ exam.total_marks() }} total marks
+      </p>
+    </div>
+    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Add a Question</h2>
+      <form method="POST" action="{{ url_for('teacher.manage_questions', exam_id=exam.id) }}">
+        <div class="form-row">
+          <label for="question_text">Question</label>
+          <textarea id="question_text" name="question_text" required></textarea>
+        </div>
+        <div class="form-row">
+          <label for="marks">Marks</label>
+          <input type="number" id="marks" name="marks" min="1" value="1" required>
+        </div>
+        <div class="form-row">
+          <label>Answer Choices (select the correct one)</label>
+          {% for i in range(4) %}
+          <div class="choice-row">
+            <input type="radio" name="correct_choice" value="{{ i }}" {% if i == 0 %}required{% endif %}>
+            <input type="text" name="choice_text" placeholder="Choice {{ i + 1 }}{% if i < 2 %} (required){% endif %}"
+                   {% if i < 2 %}required{% endif %}>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn">Add Question</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Questions ({{ exam.questions|length }})</h2>
+      {% if exam.questions %}
+        {% for q in exam.questions %}
+        <div class="question-block">
+          <div class="page-header" style="margin-bottom:0.3rem;">
+            <strong>Q{{ loop.index }}. {{ q.question_text }}</strong>
+            <span class="badge">{{ q.marks }} pt(s)</span>
+          </div>
+          <ul style="margin:0.3rem 0; padding-left: 1.2rem;">
+            {% for c in q.choices %}
+            <li style="{% if c.is_correct %}color: var(--success); font-weight:600;{% endif %}">
+              {{ c.choice_text }} {% if c.is_correct %}✓{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          <form method="POST" action="{{ url_for('teacher.delete_question', exam_id=exam.id, question_id=q.id) }}"
+                onsubmit="return confirm('Delete this question?');">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">No questions added yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="{{ url_for('teacher.publish_exam', exam_id=exam.id) }}">
+      <button type="submit" class="btn btn-success">
+        {{ 'Unpublish Exam' if exam.is_published else 'Publish Exam (make visible to students)' }}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

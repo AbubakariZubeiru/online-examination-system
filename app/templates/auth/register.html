@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Register - ExamPortal{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <h1>Create an account</h1>
+    <p class="subtitle">Join ExamPortal as a student or teacher</p>
+    <form method="POST" action="{{ url_for('auth.register') }}">
+      <div class="form-row">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" value="{{ form_data.get('username', '') }}" required autofocus>
+      </div>
+      <div class="form-row">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ form_data.get('email', '') }}" required>
+      </div>
+      <div class="form-row">
+        <label for="role">I am a</label>
+        <select id="role" name="role">
+          <option value="student" {% if form_data.get('role') == 'student' %}selected{% endif %}>Student</option>
+          <option value="teacher" {% if form_data.get('role') == 'teacher' %}selected{% endif %}>Teacher</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <div class="form-row">
+        <label for="confirm_password">Confirm Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
+      </div>
+      <button type="submit" class="btn btn-block">Register</button>
+    </form>
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

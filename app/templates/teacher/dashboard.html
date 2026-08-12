@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>My Exams</h1>
+    <a href="{{ url_for('teacher.create_exam') }}" class="btn">+ Create New Exam</a>
+  </div>
+
+  {% if exams %}
+  <div class="grid grid-2">
+    {% for exam in exams %}
+    <div class="card">
+      <div class="page-header" style="margin-bottom:0.5rem;">
+        <h3 style="margin:0;">{{ exam.title }}</h3>
+        {% if exam.is_published %}
+          <span class="status-pill status-published">Published</span>
+        {% else %}
+          <span class="status-pill status-draft">Draft</span>
+        {% endif %}
+      </div>
+      <p style="color: var(--muted); font-size: 0.9rem;">{{ exam.description or "No description provided." }}</p>
+      <p style="font-size: 0.85rem; color: var(--muted);">
+        {{ exam.duration_minutes }} minutes &middot; {{ exam.questions|length }} question(s) &middot; {{ exam.total_marks() }} marks
+      </p>
+      <div class="actions">
+        <a class="btn btn-sm" href="{{ url_for('teacher.manage_questions', exam_id=exam.id) }}">Manage Questions</a>
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('teacher.exam_results', exam_id=exam.id) }}">View Results</a>
+        <form method="POST" action="{{ url_for('teacher.publish_exam', exam_id=exam.id) }}">
+          <button class="btn btn-sm btn-success" type="submit">
+            {{ 'Unpublish' if exam.is_published else 'Publish' }}
+          </button>
+        </form>
+        <form method="POST" action="{{ url_for('teacher.delete_exam', exam_id=exam.id) }}"
+              onsubmit="return confirm('Delete this exam permanently?');">
+          <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card empty-state">
+    <p>You haven't created any exams yet.</p>
+    <a href="{{ url_for('teacher.create_exam') }}" class="btn">Create your first exam</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

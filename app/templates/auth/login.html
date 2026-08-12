@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login - ExamPortal{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="subtitle">Log in to your ExamPortal account</p>
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div class="form-row">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autofocus>
+      </div>
+      <div class="form-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn btn-block">Log In</button>
+    </form>
+    <p class="auth-switch">Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+  </div>
+</div>
+{% endblock %}

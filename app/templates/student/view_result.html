@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Exam Result{% endblock %}
+{% block content %}
+<div class="container" style="max-width:600px;">
+  <div class="card score-hero">
+    <h2 style="margin-top:0;">{{ submission.exam.title }}</h2>
+    <div class="score-value">{{ submission.score }} / {{ submission.total_marks }}</div>
+    <p style="color: var(--muted);">{{ submission.percentage() }}% &middot; submitted {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Answer Review</h3>
+    {% for answer in submission.answers %}
+    {% set q = answer.question %}
+    {% set correct = q.correct_choice() %}
+    <div class="question-block">
+      <p><strong>{{ q.question_text }}</strong> <span class="badge">{{ q.marks }} pt(s)</span></p>
+      <p>Your answer:
+        {% if answer.selected_choice %}
+          <span style="{% if correct and answer.selected_choice.id == correct.id %}color: var(--success); font-weight:600;{% else %}color: var(--danger); font-weight:600;{% endif %}">
+            {{ answer.selected_choice.choice_text }}
+          </span>
+        {% else %}
+          <em style="color: var(--muted);">Not answered</em>
+        {% endif %}
+      </p>
+      {% if not correct or not answer.selected_choice or answer.selected_choice.id != correct.id %}
+      <p style="color: var(--success);">Correct answer: {{ correct.choice_text if correct else "N/A" }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <a href="{{ url_for('student.dashboard') }}" class="btn">Back to Dashboard</a>
+</div>
+{% endblock %}
