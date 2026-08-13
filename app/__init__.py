@@ -77,3 +77,6 @@ def _seed_admin(app):
         db.session.add(admin)
         db.session.commit()
         print(f"[setup] Default admin created -> username: {admin_username}")
+
+
+app = create_app()
