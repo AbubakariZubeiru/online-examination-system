@@ -46,8 +46,50 @@ with three roles: **Admin**, **Teacher**, and **Student**.
    - Register a teacher account to create and publish exams.
    - Register a student account to take published exams.
 
-The SQLite database (`exam_system.db`) is created automatically on first run —
-no manual migration step needed.
+The SQLite database (`instance/exam_system.db`) is created automatically on
+first run — no manual migration step needed.
+
+### Quickly testing the Teacher and Student interfaces
+
+The Admin role is deliberately limited to user/exam oversight — it cannot
+create or take exams itself (that's the Teacher's and Student's job). To try
+those interfaces without manually registering accounts, run the demo seeder
+once the app has been started at least once:
+
+```bash
+python seed_demo.py
+```
+
+This creates (if they don't already exist):
+- `teacher_demo` / `Teacher@123` — owns a published exam, "General Knowledge Quiz"
+- `student_demo` / `Student@123` — can immediately take that exam
+
+Log out of admin and log in as either to explore that role's interface. The
+script is safe to re-run; it skips anything that already exists.
+
+## Running Tests
+
+```bash
+pip install -r requirements.txt   # includes pytest
+pytest
+```
+
+Tests cover registration/login, teacher exam creation & publishing, correct
+and incorrect auto-grading, admin user management (including disabling a
+user's login), and role-based access enforcement (`tests/test_app.py`).
+
+## Deployment
+
+- **`wsgi.py`** — production entry point (`gunicorn wsgi:app`); `run.py` stays
+  for local development with the Flask reloader.
+- **`Procfile`** — for Heroku/Render-style platforms.
+- **`Dockerfile`** / **`docker-compose.yml`** — containerized run:
+  ```bash
+  docker compose up --build
+  ```
+  Set a real `SECRET_KEY` and admin password in `.env` before deploying
+  anywhere public, and point `DATABASE_URL` at a persistent/production
+  database (e.g. Postgres) rather than the default SQLite file.
 
 ## Project Structure
 
@@ -64,9 +106,20 @@ online-examination-system/
 │   ├── services/assessment.py  # grading logic (auto-scores MCQ submissions)
 │   ├── static/css/style.css
 │   └── templates/           # Jinja2 templates for each role
-├── config.py                # Config loaded from .env
-├── run.py                   # Entry point
+├── tests/
+│   ├── conftest.py           # pytest fixtures (isolated temp-file DB per run)
+│   └── test_app.py           # auth, teacher, student, admin functional tests
+├── config.py                 # Config loaded from .env
+├── run.py                    # Local dev entry point
+├── wsgi.py                   # Production entry point (gunicorn)
+├── seed_demo.py               # One-command demo teacher/student/exam seeder
 ├── requirements.txt
+├── pytest.ini
+├── Procfile                  # Heroku/Render style deployment
+├── Dockerfile
+├── docker-compose.yml
+├── .gitignore
+├── LICENSE
 └── .env
 ```
 

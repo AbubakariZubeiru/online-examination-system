@@ -3,23 +3,46 @@
 {% block content %}
 <div class="container">
   <div class="page-header">
-    <h1>Results: {{ exam.title }}</h1>
-    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    <div>
+      <h1 style="margin-bottom:0.2rem;">Results: {{ exam.title }}</h1>
+      <p style="color: var(--muted); margin-top:0;"><strong>{{ submissions|length }} submission(s)</strong> recorded</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      {% if submissions %}
+        <a href="{{ url_for('teacher.export_exam_results', exam_id=exam.id) }}" class="btn btn-success">Download Results (Excel)</a>
+      {% endif %}
+      <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
   </div>
 
   <div class="card">
     {% if submissions %}
     <table>
       <thead>
-        <tr><th>Student</th><th>Score</th><th>Percentage</th><th>Submitted At</th></tr>
+        <tr>
+          <th>#</th>
+          <th>Student Username</th>
+          <th>Email Address</th>
+          <th>Score</th>
+          <th>Percentage</th>
+          <th>Attempt #</th>
+          <th>Submitted At</th>
+        </tr>
       </thead>
       <tbody>
         {% for s in submissions %}
         <tr>
-          <td>{{ s.student.username }}</td>
-          <td>{{ s.score }} / {{ s.total_marks }}</td>
-          <td>{{ s.percentage() }}%</td>
-          <td>{{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ s.student.username }}</strong></td>
+          <td>{{ s.student.email }}</td>
+          <td><strong>{{ s.score }}</strong> / {{ s.total_marks }}</td>
+          <td>
+            <span class="badge" style="background: #f0fdf4; color: #166534;">
+              {{ s.percentage() }}%
+            </span>
+          </td>
+          <td><span class="badge">Attempt {{ s.attempt_number or 1 }}</span></td>
+          <td>{{ s.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if s.submitted_at else 'N/A' }}</td>
         </tr>
         {% endfor %}
       </tbody>

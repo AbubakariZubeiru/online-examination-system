@@ -1,0 +1,22 @@
+Include:
+Student Name: Abubakari Zubeiru
+Student ID: 22425115
+Project Title: Online Examination System
+
+Live Application: [FILL IN - e.g. https://your-app.onrender.com]
+Admin URL: http://127.0.0.1:5000/admin/dashboard
+
+Test Username: student_demo
+Test Password: Student@123
+
+Admin Username: admin
+Admin Password: [FILL IN - set your own before deployment; do not use the .env default]
+
+Source Code Repository: [FILL IN - e.g. https://github.com/your-username/online-examination-system]
+
+Notes:
+- Run "python seed_demo.py" after first launch to create the demo
+  teacher_demo / Teacher@123 and student_demo / Student@123 accounts
+  used above for testing (if you plan to hand these credentials to a
+  grader instead of registering fresh accounts).
+- Change SECRET_KEY and ADMIN_PASSWORD in .env before any public deployment.

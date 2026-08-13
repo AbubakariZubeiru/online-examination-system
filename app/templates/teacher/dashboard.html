@@ -25,6 +25,7 @@
       </p>
       <div class="actions">
         <a class="btn btn-sm" href="{{ url_for('teacher.manage_questions', exam_id=exam.id) }}">Manage Questions</a>
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('teacher.publish_settings', exam_id=exam.id) }}">Publish Settings & Link</a>
         <a class="btn btn-sm btn-secondary" href="{{ url_for('teacher.exam_results', exam_id=exam.id) }}">View Results</a>
         <form method="POST" action="{{ url_for('teacher.publish_exam', exam_id=exam.id) }}">
           <button class="btn btn-sm btn-success" type="submit">

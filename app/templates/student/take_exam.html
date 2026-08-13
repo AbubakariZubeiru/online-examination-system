@@ -5,7 +5,10 @@
   <div class="page-header">
     <div>
       <h1 style="margin-bottom:0.2rem;">{{ exam.title }}</h1>
-      <p style="color: var(--muted); margin-top:0;">{{ exam.questions|length }} question(s) &middot; {{ exam.total_marks() }} total marks</p>
+      <p style="color: var(--muted); margin-top:0;">
+        Attempt <strong>{{ attempt_number }}</strong> of <strong>{{ max_attempts }}</strong> &middot; 
+        {{ exam.questions|length }} question(s) &middot; {{ exam.total_marks() }} total marks
+      </p>
     </div>
     <div id="timer">--:--</div>
   </div>

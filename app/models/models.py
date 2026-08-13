@@ -1,8 +1,43 @@
+import uuid
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db, login_manager
+
+exam_students = db.Table(
+    "exam_students",
+    db.Column("exam_id", db.Integer, db.ForeignKey("exams.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+)
+
+class_students = db.Table(
+    "class_students",
+    db.Column("class_id", db.Integer, db.ForeignKey("classes.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+)
+
+exam_classes = db.Table(
+    "exam_classes",
+    db.Column("exam_id", db.Integer, db.ForeignKey("exams.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("class_id", db.Integer, db.ForeignKey("classes.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
+class Class(db.Model):
+    __tablename__ = "classes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    teacher_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    teacher = db.relationship("User", foreign_keys=[teacher_id], backref="classes_taught")
+    students = db.relationship("User", secondary=class_students, backref="enrolled_classes")
+
+    def __repr__(self):
+        return f"<Class {self.name}>"
 
 
 class User(UserMixin, db.Model):
@@ -59,8 +94,14 @@ class Exam(db.Model):
     duration_minutes = db.Column(db.Integer, nullable=False, default=30)
     teacher_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     is_published = db.Column(db.Boolean, default=False)
+    start_time = db.Column(db.DateTime, nullable=True)
+    end_time = db.Column(db.DateTime, nullable=True)
+    max_attempts = db.Column(db.Integer, nullable=False, default=1)
+    access_token = db.Column(db.String(64), unique=True, index=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    assigned_students = db.relationship("User", secondary=exam_students, backref="assigned_exams")
+    assigned_classes = db.relationship("Class", secondary=exam_classes, backref="assigned_exams")
     questions = db.relationship("Question", backref="exam", lazy=True,
                                  cascade="all, delete-orphan")
     submissions = db.relationship("Submission", backref="exam", lazy=True,
@@ -68,6 +109,29 @@ class Exam(db.Model):
 
     def total_marks(self):
         return sum(q.marks for q in self.questions)
+
+    def generate_token(self):
+        if not self.access_token:
+            self.access_token = uuid.uuid4().hex
+        return self.access_token
+
+    def is_student_assigned(self, user):
+        if not self.assigned_students and not self.assigned_classes:
+            return True
+        if user in self.assigned_students:
+            return True
+        for c in self.assigned_classes:
+            if user in c.students:
+                return True
+        return False
+
+    def is_available_now(self):
+        now = datetime.utcnow()
+        if self.start_time and now < self.start_time:
+            return False
+        if self.end_time and now > self.end_time:
+            return False
+        return True
 
     def __repr__(self):
         return f"<Exam {self.title}>"
@@ -110,14 +174,11 @@ class Submission(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     score = db.Column(db.Float, default=0)
     total_marks = db.Column(db.Float, default=0)
+    attempt_number = db.Column(db.Integer, default=1)
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     answers = db.relationship("Answer", backref="submission", lazy=True,
                                cascade="all, delete-orphan")
-
-    __table_args__ = (
-        db.UniqueConstraint("exam_id", "student_id", name="uq_exam_student"),
-    )
 
     def percentage(self):
         if self.total_marks == 0:
@@ -134,3 +195,4 @@ class Answer(db.Model):
     choice_id = db.Column(db.Integer, db.ForeignKey("choices.id"), nullable=True)
 
     selected_choice = db.relationship("Choice", foreign_keys=[choice_id])
+

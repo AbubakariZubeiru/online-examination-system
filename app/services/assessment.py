@@ -9,13 +9,14 @@ from app import db
 from app.models.models import Submission, Answer
 
 
-def grade_submission(exam, student, answers_dict):
+def grade_submission(exam, student, answers_dict, attempt_number=1):
     """
     Grade and persist a submission.
 
     :param exam: Exam instance being taken
     :param student: User instance (the student submitting)
     :param answers_dict: dict of {question_id (int): choice_id (int or None)}
+    :param attempt_number: integer attempt number for this student & exam
     :return: the created Submission instance
     """
     total_marks = exam.total_marks()
@@ -25,6 +26,7 @@ def grade_submission(exam, student, answers_dict):
         exam_id=exam.id,
         student_id=student.id,
         total_marks=total_marks,
+        attempt_number=attempt_number,
     )
     db.session.add(submission)
     db.session.flush()  # get submission.id before committing

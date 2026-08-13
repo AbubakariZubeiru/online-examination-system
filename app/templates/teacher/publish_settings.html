@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Publishing Settings - {{ exam.title }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 820px;">
+  <div class="page-header">
+    <div>
+      <h1 style="margin-bottom:0.2rem;">Publishing Settings</h1>
+      <p style="color: var(--muted); margin-top:0;">Configuring settings for: <strong>{{ exam.title }}</strong></p>
+    </div>
+    <div>
+      {% if exam.is_published %}
+        <span class="status-pill status-published">Published</span>
+      {% else %}
+        <span class="status-pill status-draft">Draft</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Shareable Exam Link Card -->
+  <div class="card" style="background: #f8fafc; border: 1px solid #cbd5e1;">
+    <h3>Shareable Exam Link</h3>
+    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem;">
+      Share this direct URL with students to let them jump straight into taking this exam.
+    </p>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <input type="text" id="share-url" value="{{ shareable_link }}" readonly style="background: #fff; font-family: monospace; font-size: 0.9rem;" />
+      <button type="button" class="btn btn-secondary" onclick="copyShareUrl()" id="copy-btn">Copy Link</button>
+    </div>
+  </div>
+
+  <!-- Publishing Settings Form -->
+  <div class="card">
+    <form method="POST" action="{{ url_for('teacher.publish_settings', exam_id=exam.id) }}">
+      
+      <!-- Date & Time Window -->
+      <h3>Schedule & Availability Window</h3>
+      <p style="font-size:0.85rem; color: var(--muted); margin-top: -0.5rem;">
+        Leave blank to make the exam open at any time once published.
+      </p>
+      
+      <div class="grid grid-2">
+        <div class="form-row">
+          <label for="start_time">Start Date & Time</label>
+          <input type="datetime-local" id="start_time" name="start_time"
+                 value="{{ exam.start_time.strftime('%Y-%m-%dT%H:%M') if exam.start_time else '' }}">
+        </div>
+        <div class="form-row">
+          <label for="end_time">End Date & Time</label>
+          <input type="datetime-local" id="end_time" name="end_time"
+                 value="{{ exam.end_time.strftime('%Y-%m-%dT%H:%M') if exam.end_time else '' }}">
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+      <!-- Number of Takes / Attempts -->
+      <h3>Allowed Attempts (Takes)</h3>
+      <div class="form-row" style="max-width: 300px;">
+        <label for="max_attempts">Maximum Takes per Student</label>
+        <input type="number" id="max_attempts" name="max_attempts" min="1" value="{{ exam.max_attempts or 1 }}" required>
+        <span style="font-size: 0.8rem; color: var(--muted);">Students will be locked out after completing this number of attempts.</span>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+      <!-- Class Selection -->
+      <h3>Target Class Selection</h3>
+      <p style="font-size:0.85rem; color: var(--muted); margin-top: -0.5rem;">
+        Select one or more classes for this exam. All students in the selected class(es) will be allowed to take this exam.
+        If no classes are selected, the exam will be accessible to all registered students.
+      </p>
+
+      {% if teacher_classes %}
+      <div style="margin-bottom: 0.5rem;">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllClasses(true)">Select All Classes</button>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllClasses(false)">Clear Selection</button>
+      </div>
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; background: #fff; margin-bottom: 1.25rem;">
+        {% for c in teacher_classes %}
+        <div class="choice-row" style="padding: 0.4rem 0; border-bottom: 1px solid #f1f5f9;">
+          <input type="checkbox" id="class_{{ c.id }}" name="assigned_classes" value="{{ c.id }}"
+                 {% if c in exam.assigned_classes %}checked{% endif %} class="class-checkbox">
+          <label for="class_{{ c.id }}" style="font-weight: 500; font-size: 0.95rem; cursor: pointer;">
+            <strong>{{ c.name }}</strong>
+            <span style="color: var(--muted); font-size: 0.85rem; font-weight: normal; margin-left: 0.5rem;">
+              ({{ c.students|length }} student{{ 's' if c.students|length != 1 else '' }})
+            </span>
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.9rem;">
+        No classes created yet. You can create classes and upload student rosters in
+        <a href="{{ url_for('teacher.manage_classes') }}" target="_blank" style="color: #1d4ed8; text-decoration: underline; font-weight: 600;">Classes & Students</a>.
+      </div>
+      {% endif %}
+
+      <!-- Optional Individual Student Selection Toggle -->
+      <details style="margin-top: 1rem; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; background: #fafafa;">
+        <summary style="font-weight: 600; font-size: 0.9rem; cursor: pointer; color: var(--muted);">
+          Advanced: Assign specific individual students (outside of class groups)
+        </summary>
+        <div style="margin-top: 0.75rem;">
+          <p style="font-size:0.85rem; color: var(--muted);">
+            Check additional individual students who are not part of the selected classes above.
+          </p>
+          {% if all_students %}
+          <div style="margin-bottom: 0.5rem;">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllStudents(true)">Select All Students</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllStudents(false)">Clear Selection</button>
+          </div>
+          <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; background: #fff;">
+            {% for s in all_students %}
+            <div class="choice-row" style="padding: 0.2rem 0;">
+              <input type="checkbox" id="student_{{ s.id }}" name="assigned_students" value="{{ s.id }}"
+                     {% if s in exam.assigned_students %}checked{% endif %} class="student-checkbox">
+              <label for="student_{{ s.id }}" style="font-weight: 400; font-size: 0.85rem;">
+                <strong>{{ s.username }}</strong> &lt;{{ s.email }}&gt;
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p style="color: var(--muted); font-size: 0.85rem;">No registered student accounts exist yet.</p>
+          {% endif %}
+        </div>
+      </details>
+
+      <div class="actions" style="margin-top: 1.5rem;">
+        <button type="submit" name="action" value="save" class="btn">Save Settings</button>
+        {% if exam.is_published %}
+          <button type="submit" name="action" value="unpublish" class="btn btn-secondary">Unpublish Exam</button>
+        {% else %}
+          <button type="submit" name="action" value="publish" class="btn btn-success">Save & Publish Exam</button>
+        {% endif %}
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  function copyShareUrl() {
+    const input = document.getElementById('share-url');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy Link'; }, 2000);
+    });
+  }
+
+  function toggleAllClasses(select) {
+    document.querySelectorAll('.class-checkbox').forEach(cb => cb.checked = select);
+  }
+
+  function toggleAllStudents(select) {
+    document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = select);
+  }
+</script>
+{% endblock %}

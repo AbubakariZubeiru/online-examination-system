@@ -3,30 +3,48 @@
 {% block content %}
 <div class="container">
   <div class="page-header">
-    <h1>Available Exams</h1>
+    <div>
+      <h1 style="margin-bottom:0.2rem;">Available Exams</h1>
+      <p style="color: var(--muted); margin-top:0;">Select an assigned exam to begin your assessment.</p>
+    </div>
     <a href="{{ url_for('student.history') }}" class="btn btn-secondary">My Results</a>
   </div>
 
   {% if available_exams %}
   <div class="grid grid-2">
     {% for exam in available_exams %}
+    {% set takes = exam_attempt_counts.get(exam.id, 0) %}
     <div class="card">
       <h3 style="margin-top:0;">{{ exam.title }}</h3>
       <p style="color: var(--muted); font-size: 0.9rem;">{{ exam.description or "No description provided." }}</p>
       <p style="font-size: 0.85rem; color: var(--muted);">
-        {{ exam.duration_minutes }} minutes &middot; {{ exam.questions|length }} question(s) &middot; {{ exam.total_marks() }} marks
+        Duration: {{ exam.duration_minutes }} mins &middot; {{ exam.questions|length }} question(s) &middot; {{ exam.total_marks() }} marks
       </p>
-      {% if exam.id in taken_exam_ids %}
-        <span class="status-pill status-active">Completed</span>
+
+      <div style="font-size: 0.85rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; margin: 0.85rem 0; border: 1px solid var(--border);">
+        <div><strong>Attempts:</strong> {{ takes }} / {{ exam.max_attempts }}</div>
+        {% if exam.start_time or exam.end_time %}
+        <div style="margin-top: 0.25rem; color: var(--muted);">
+          Schedule Window: {{ exam.start_time.strftime('%Y-%m-%d %H:%M') if exam.start_time else 'Anytime' }} to {{ exam.end_time.strftime('%Y-%m-%d %H:%M') if exam.end_time else 'No limit' }}
+        </div>
+        {% endif %}
+      </div>
+
+      {% if takes >= exam.max_attempts %}
+        <span class="status-pill status-disabled">Completed ({{ takes }}/{{ exam.max_attempts }} Takes Used)</span>
+      {% elif not exam.is_available_now() %}
+        <span class="status-pill status-draft">Outside Schedule Window</span>
       {% else %}
-        <a href="{{ url_for('student.take_exam', exam_id=exam.id) }}" class="btn">Take Exam</a>
+        <a href="{{ url_for('student.take_exam', exam_id=exam.id) }}" class="btn">
+          {{ 'Take Exam Again' if takes > 0 else 'Take Exam' }}
+        </a>
       {% endif %}
     </div>
     {% endfor %}
   </div>
   {% else %}
   <div class="card empty-state">
-    <p>No exams are currently available. Check back later!</p>
+    <p>No exams are currently available for you. Check back later!</p>
   </div>
   {% endif %}
 </div>

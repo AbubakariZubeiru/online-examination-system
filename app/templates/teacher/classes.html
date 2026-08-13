@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Classes & Student Management{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 style="margin-bottom:0.2rem;">Classes & Students</h1>
+      <p style="color: var(--muted); margin-top:0;">Manage classes, add individual students, and upload student rosters from Excel.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <!-- Create Class Form -->
+    <div class="card">
+      <h3>Create New Class</h3>
+      <form method="POST" action="{{ url_for('teacher.manage_classes') }}">
+        <div class="form-row">
+          <label for="name">Class Name</label>
+          <input type="text" id="name" name="name" placeholder="e.g. Grade 10 - Mathematics" required>
+        </div>
+        <div class="form-row">
+          <label for="description">Description (Optional)</label>
+          <textarea id="description" name="description" placeholder="e.g. Science stream morning section"></textarea>
+        </div>
+        <button type="submit" class="btn">Create Class</button>
+      </form>
+    </div>
+
+    <!-- Existing Classes List -->
+    <div class="card">
+      <h3>My Classes ({{ classes|length }})</h3>
+      {% if classes %}
+        {% for c in classes %}
+        <div style="border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 0.85rem; background: #ffffff;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h4 style="margin: 0 0 0.35rem 0; font-size: 1.05rem;">
+                <a href="{{ url_for('teacher.class_detail', class_id=c.id) }}" style="color: var(--primary); text-decoration: none; font-weight: 700;">
+                  {{ c.name }}
+                </a>
+              </h4>
+              <p style="font-size: 0.85rem; color: var(--muted); margin: 0;">
+                {{ c.description or "No description provided." }}
+              </p>
+            </div>
+            <span class="badge">
+              {{ c.students|length }} student(s)
+            </span>
+          </div>
+
+          <div class="actions" style="margin-top: 1rem;">
+            <a href="{{ url_for('teacher.class_detail', class_id=c.id) }}" class="btn btn-sm">Manage Roster & Upload Excel</a>
+            <a href="{{ url_for('teacher.export_class_results', class_id=c.id) }}" class="btn btn-sm btn-secondary">Download Results</a>
+            <form method="POST" action="{{ url_for('teacher.delete_class', class_id=c.id) }}" onsubmit="return confirm('Delete this class?');" style="display:inline;">
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state" style="padding: 2rem 0;">No classes created yet. Use the form on the left to add your first class.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

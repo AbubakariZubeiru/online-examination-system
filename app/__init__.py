@@ -38,9 +38,28 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
+        _migrate_db(app)
         _seed_admin(app)
 
     return app
+
+
+def _migrate_db(app):
+    """Ensure missing columns are added to existing SQLite database tables."""
+    from sqlalchemy import text
+    migrations = [
+        "ALTER TABLE exams ADD COLUMN start_time DATETIME;",
+        "ALTER TABLE exams ADD COLUMN end_time DATETIME;",
+        "ALTER TABLE exams ADD COLUMN max_attempts INTEGER NOT NULL DEFAULT 1;",
+        "ALTER TABLE exams ADD COLUMN access_token VARCHAR(64);",
+        "ALTER TABLE submissions ADD COLUMN attempt_number INTEGER DEFAULT 1;",
+    ]
+    for stmt in migrations:
+        try:
+            db.session.execute(text(stmt))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
 
 def _seed_admin(app):

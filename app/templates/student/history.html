@@ -11,12 +11,13 @@
     {% if submissions %}
     <table>
       <thead>
-        <tr><th>Exam</th><th>Score</th><th>Percentage</th><th>Submitted At</th><th></th></tr>
+        <tr><th>Exam</th><th>Attempt</th><th>Score</th><th>Percentage</th><th>Submitted At</th><th></th></tr>
       </thead>
       <tbody>
         {% for s in submissions %}
         <tr>
           <td>{{ s.exam.title }}</td>
+          <td><span class="badge">Take #{{ s.attempt_number or 1 }}</span></td>
           <td>{{ s.score }} / {{ s.total_marks }}</td>
           <td>{{ s.percentage() }}%</td>
           <td>{{ s.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>

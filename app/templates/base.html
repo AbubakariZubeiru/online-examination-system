@@ -9,20 +9,23 @@
 <body>
   {% if current_user.is_authenticated %}
   <nav class="navbar">
-    <a class="brand" href="{{ url_for('index') }}">📝 ExamPortal</a>
+    <a class="brand" href="{{ url_for('index') }}">ExamPortal <span class="brand-mark">EDU</span></a>
     <div class="nav-links">
       {% if current_user.is_admin() %}
-        <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' else '' }}">Dashboard</a>
       {% elif current_user.is_teacher() %}
-        <a href="{{ url_for('teacher.dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('teacher.create_exam') }}">Create Exam</a>
+        <a href="{{ url_for('teacher.dashboard') }}" class="{{ 'active' if request.endpoint in ['teacher.dashboard', 'teacher.exam_results', 'teacher.manage_questions', 'teacher.publish_settings'] else '' }}">Dashboard</a>
+        <a href="{{ url_for('teacher.create_exam') }}" class="{{ 'active' if request.endpoint == 'teacher.create_exam' else '' }}">Create Exam</a>
+        <a href="{{ url_for('teacher.manage_classes') }}" class="{{ 'active' if request.endpoint in ['teacher.manage_classes', 'teacher.class_detail'] else '' }}">Classes & Students</a>
       {% elif current_user.is_student() %}
-        <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('student.history') }}">My Results</a>
+        <a href="{{ url_for('student.dashboard') }}" class="{{ 'active' if request.endpoint in ['student.dashboard', 'student.take_exam', 'student.view_result'] else '' }}">Dashboard</a>
+        <a href="{{ url_for('student.history') }}" class="{{ 'active' if request.endpoint == 'student.history' else '' }}">My Results</a>
       {% endif %}
-      <span class="badge">{{ current_user.role }}</span>
-      <span>{{ current_user.username }}</span>
-      <a href="{{ url_for('auth.logout') }}">Logout</a>
+      <div class="user-tag">
+        <span class="badge">{{ current_user.role }}</span>
+        <span>{{ current_user.username }}</span>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" style="color: #ef4444;">Logout</a>
     </div>
   </nav>
   {% endif %}
